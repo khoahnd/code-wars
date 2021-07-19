@@ -34,7 +34,7 @@ For C# user: Do not use Mono. Mono is too slower when run your code.
  */
 function getPINs(observed) {
     const lines = [];
-    const cartesian = (lines) => lines.reduce((a, b) => (
+    const generatePassword = (adjacentDigits) => adjacentDigits.reduce((a, b) => (
         a.map((x) =>
             b.map((y) =>
                 x.concat(y)
@@ -49,19 +49,22 @@ function getPINs(observed) {
         const indexOfLine = keypad.findIndex(i => i.includes(observed[index]));
         const indexOfNumber = keypad[indexOfLine].indexOf(observed[index]);
         lines[index] = lines[index] || [];
-        if (keypad[indexOfLine][indexOfNumber] === 0) lines[index].push(keypad[indexOfLine][indexOfNumber]);
-        else {
-            if (indexOfNumber === 0) keypad[indexOfLine].pop();
-            if (indexOfNumber === (keypad[indexOfLine].length - 1)) keypad[indexOfLine].shift();
-            lines[index].push(...keypad[indexOfLine].filter(i => i));
+        // If the number is at the beginning of the line, we only get the following adjacent number.
+        if (indexOfNumber === 0) keypad[indexOfLine].pop();
+        // If the number is at the end of the sequence, we will get the next word after it.
+        if (indexOfNumber === (keypad[indexOfLine].length - 1)) keypad[indexOfLine].shift();
+        // Get a list of contiguous numbers on the same row
+        lines[index].push(...keypad[indexOfLine].filter(i => i));
+        // Get the exact number because of the position on the line above.
+        if (keypad[indexOfLine - 1] && keypad[indexOfLine - 1][indexOfNumber]) {
+            lines[index].push(keypad[indexOfLine - 1][indexOfNumber]);
         }
-        if (indexOfLine === 0) lines[index].push(keypad[indexOfLine + 1][indexOfNumber]);
-        else if (indexOfLine > 0 && indexOfLine < (keypad.length - 1)) {
-            if (keypad[indexOfLine - 1][indexOfNumber]) lines[index].push(keypad[indexOfLine - 1][indexOfNumber]);
-            if (keypad[indexOfLine + 1][indexOfNumber]) lines[index].push(keypad[indexOfLine + 1][indexOfNumber]);
-        } else lines[index].push(keypad[indexOfLine - 1][indexOfNumber]);
+        // Get the exact number because of the position in the line below.
+        if (keypad[indexOfLine + 1] && keypad[indexOfLine + 1][indexOfNumber]) {
+            lines[index].push(keypad[indexOfLine + 1][indexOfNumber]);
+        }
     }
-    return cartesian(lines).map(arr => arr.join(''));
+    return generatePassword(lines).map(arr => arr.join(''));
 }
 
 // Sample Tests:
@@ -111,5 +114,4 @@ function getPINs(observed) {
             availables.unshift(which);
         }
     })([]);
-
 }
